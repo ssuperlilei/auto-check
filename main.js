@@ -24,22 +24,50 @@ if (!fs.existsSync('auth.json')) {
     // --- 步骤 2: 执行签到 ---
     console.log("\n2. 尝试进行签到...");
     try {
-      // 找到“去签到”按钮。我们用一个更可靠的组合选择器
-      const checkInButton = page.locator('.signin.btn');
-      console.log("  - 查找'去签到'按钮... ", checkInButton);
-      if (await checkInButton.isVisible()) {
-        const buttonText = await checkInButton.textContent();
-        if (buttonText.includes('立即签到')) {
-          await checkInButton.click();
-          console.log("  - 点击了'去签到'按钮。");
-          // 等待签到成功的弹窗出现
-          await page.waitForSelector('text=签到成功', { timeout: 10000 });
-          console.log("  - 签到成功！");
-        } else {
-          console.log(`  - 按钮文本为 "${buttonText}"，可能已经签到过了。`);
+      // 先检查页面是否正确加载
+      console.log("  - 当前页面URL:", page.url());
+
+      // 等待页面完全加载
+      await page.waitForLoadState('networkidle');
+
+      // 尝试等待签到相关元素出现
+      try {
+        await page.waitForSelector('text=签到', { timeout: 10000 });
+        console.log("  - 找到签到相关文字");
+      } catch (e) {
+        console.log("  - 10秒内未找到签到相关文字，可能已经签到过了: ", e);
+      }
+
+      // 打印页面标题和部分内容
+      console.log("  - 页面标题:", await page.title());
+      const bodyText = await page.locator('body').textContent();
+      console.log("  - 页面是否包含'掘金':", bodyText.includes('掘金'));
+      console.log("  - 页面是否包含'签到':", bodyText.includes('签到'));
+
+      // 页面已加载，重新检查签到按钮
+      const signInSelectors = [
+        'button:has-text("立即签到")',
+      ];
+
+      for (const selector of signInSelectors) {
+        const element = page.locator(selector);
+        const count = await element.count();
+        const isVisible = count > 0 ? await element.isVisible() : false;
+        console.log(`  - 选择器 "${selector}": 数量=${count}, 可见=${isVisible}`);
+
+        if (count > 0) {
+          const text = await element.textContent();
+          console.log(`    文本内容: "${text}"`);
         }
+      }
+
+      // 尝试点击找到的签到按钮
+      const checkInButton = page.locator('button:has-text("签到")');
+      if (await checkInButton.count() > 0) {
+        await checkInButton.click();
+        console.log("  - 已点击签到按钮");
       } else {
-        console.log("  - 未找到'去签到'按钮，可能已经签到过了。");
+        console.log("  - 未找到可点击的签到按钮");
       }
     } catch (e) {
       if (e.name === 'TimeoutError') {
