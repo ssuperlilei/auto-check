@@ -12,14 +12,27 @@ if (!fs.existsSync('auth.json')) {
 
 (async () => {
   // 启动无头浏览器并加载登录状态
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ storageState: 'auth.json' });
+  const browser = await chromium.launch({ 
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-web-security',
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    ]
+  });
+  const context = await browser.newContext({ 
+    storageState: 'auth.json',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    viewport: { width: 1920, height: 1080 }
+  });
   const page = await context.newPage();
 
   try {
     console.log("1. 导航到掘金首页...");
     await page.goto("https://juejin.cn/user/center/signin", { timeout: 60000 });
-    await page.waitForTimeout(3000); // 等待页面加载一些动态内容
+    await page.waitForTimeout(5000); // 增加等待时间
 
     // --- 步骤 2: 执行签到 ---
     console.log("\n2. 尝试进行签到...");
@@ -44,9 +57,17 @@ if (!fs.existsSync('auth.json')) {
       console.log("  - 页面是否包含'掘金':", bodyText.includes('掘金'));
       console.log("  - 页面是否包含'签到':", bodyText.includes('签到'));
 
+      // 添加更多调试信息
+      console.log("  - 页面完整HTML长度:", (await page.content()).length);
+      await page.screenshot({ path: 'debug-signin.png', fullPage: true });
+
       // 页面已加载，重新检查签到按钮
       const signInSelectors = [
         'button:has-text("立即签到")',
+        'button:has-text("签到")',
+        '[data-v-*]:has-text("签到")',
+        '.signin-btn',
+        '.check-in-btn'
       ];
 
       for (const selector of signInSelectors) {
