@@ -12,7 +12,7 @@ if (!fs.existsSync('auth.json')) {
 
 (async () => {
   // 启动无头浏览器并加载登录状态
-  const browser = await chromium.launch({ 
+  const browser = await chromium.launch({
     headless: true,
     args: [
       '--no-sandbox',
@@ -22,7 +22,7 @@ if (!fs.existsSync('auth.json')) {
       '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     ]
   });
-  const context = await browser.newContext({ 
+  const context = await browser.newContext({
     storageState: 'auth.json',
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     viewport: { width: 1920, height: 1080 }
@@ -65,7 +65,6 @@ if (!fs.existsSync('auth.json')) {
       const signInSelectors = [
         'button:has-text("立即签到")',
         'button:has-text("签到")',
-        '[data-v-*]:has-text("签到")',
         '.signin-btn',
         '.check-in-btn'
       ];
