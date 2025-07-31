@@ -51,19 +51,68 @@ node main.js
 
 脚本会自动完成操作并输出日志。
 
-### 5. (可选) 设置定时任务
+### 5. (可选) 使用 GitHub Actions 设置定时任务
 
-为了实现每日自动运行，你可以使用系统的定时任务功能（如 Linux/macOS 的 `cron` 或 Windows 的 `Task Scheduler`）来定时执行 `node main.js` 命令。
+为了实现每日自动运行，你可以使用 GitHub Actions 来定时执行签到任务。
 
-例如，在 Linux 或 macOS 上，你可以这样设置每天早上10点执行：
+#### 步骤：
 
-```bash
-# 编辑 crontab
-crontab -e
+1. **Fork 或上传项目到 GitHub**
+   将项目代码上传到你的 GitHub 仓库中。
 
-# 添加以下内容 (请将 /path/to/your/project 替换为你的项目实际路径)
-0 10 * * * cd /path/to/your/project && node main.js >> /path/to/your/project/cron.log 2>&1
+2. **设置 GitHub Secrets**
+   - 进入你的 GitHub 仓库页面
+   - 点击 `Settings` → `Secrets and variables` → `Actions`
+   - 点击 `New repository secret`
+   - 创建一个名为 `AUTH_JSON` 的 secret，将你本地 `auth.json` 文件的内容复制粘贴进去
+
+3. **创建 GitHub Actions 工作流**
+   在项目根目录创建 `.github/workflows/daily-checkin.yml` 文件：
+
+```yaml
+name: 掘金自动签到
+
+on:
+  schedule:
+    # 每天北京时间早上 9 点执行（UTC 时间 1:00）
+    - cron: '0 1 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      
+    - name: 设置 Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: 安装依赖
+      run: npm install
+      
+    - name: 创建 auth.json
+      run: echo '${{ secrets.AUTH_JSON }}' > auth.json
+      
+    - name: 执行签到
+      run: node main.js
+      
+    - name: 删除 auth.json
+      if: always()
+      run: rm -f auth.json
 ```
+
+4. **测试运行**
+   - 提交代码后，可以在仓库的 `Actions` 标签页手动触发工作流测试
+   - 之后会按照设定的时间自动执行
+
+#### 注意事项：
+- GitHub Actions 的免费额度对于个人项目来说通常足够使用
+- 可以根据需要调整执行时间（修改 cron 表达式）
+- 建议定期检查 Actions 的执行日志，确保签到正常运行
 
 ## 项目文件说明
 
