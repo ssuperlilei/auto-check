@@ -32,7 +32,8 @@ jobs:
 
       # 5. 从 Secret 创建 auth.json 文件
       - name: Create auth.json from Secret
-        run: echo "${{ secrets.AUTH_JSON }}" > auth.json
+        run: |
+          printf '%s' "${{ secrets.AUTH_JSON }}" > auth.json
 
       # 6. 调试 auth.json 文件
       - name: Debug auth.json
