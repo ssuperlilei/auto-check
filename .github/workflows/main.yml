@@ -1,4 +1,3 @@
-
 name: Juejin Auto Check-in (Node.js)
 
 on:
@@ -35,14 +34,18 @@ jobs:
       - name: Create auth.json from Secret
         run: echo "${{ secrets.AUTH_JSON }}" > auth.json
 
-      # 6. 运行主脚本
+      # 6. 调试 auth.json 文件
+      - name: Debug auth.json
+        run: cat auth.json
+
+      # 7. 运行主脚本
       - name: Run Playwright script
         run: node main.js
         env:
           # 设置显示环境变量
           DISPLAY: :99
           
-      # 7. 上传调试截图（如果失败）
+      # 8. 上传调试截图（如果失败）
       - name: Upload screenshots
         if: failure()
         uses: actions/upload-artifact@v4
